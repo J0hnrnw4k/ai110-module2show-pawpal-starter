@@ -4,55 +4,53 @@
 
 **a. Initial design**
 
-- Briefly describe your initial UML design.
-- What classes did you include, and what responsibilities did you assign to each?
+- I designed four classes: Task, Pet, Owner, and Scheduler. Task holds all activity data including description, time, category, frequency, and due date. Pet manages a list of tasks for one animal and handles adding, removing, and filtering them. Owner aggregates multiple pets and provides cross-pet task access through a single interface. Scheduler is the logic brain — it sorts tasks by time, filters by pet or category, detects conflicts, and handles recurring task rescheduling. It holds no data of its own, only behavior.
 
 **b. Design changes**
 
-- Did your design change during implementation?
-- If yes, describe at least one change and why you made it.
-
----
+- Yes, two things changed. I originally planned for conflict detection to live inside Pet,
+but moved it to Scheduler because it needs visibility across all pets simultaneously.
+I also moved time_as_minutes() into Task so the sort key would be cleaner and independently testable.---
 
 ## 2. Scheduling Logic and Tradeoffs
 
 **a. Constraints and priorities**
 
-- What constraints does your scheduler consider (for example: time, priority, preferences)?
-- How did you decide which constraints mattered most?
+- The scheduler considers time (HH:MM format), due date, and frequency (once, daily, weekly). Time mattered most because overlapping tasks cause real problems for a pet owner — you cannot walk two dogs at the exact same moment.
 
 **b. Tradeoffs**
 
-- Describe one tradeoff your scheduler makes.
-- Why is that tradeoff reasonable for this scenario?
-
----
+- Conflict detection uses exact-minute matching rather than duration awareness. This means a 60-minute vet appointment will not flag a conflict with a task scheduled 30 minutes later. This tradeoff keeps the logic simple and fast while still catching the most obvious scheduling errors.
 
 ## 3. AI Collaboration
 
 **a. How you used AI**
 
-- How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
-- What kinds of prompts or questions were most helpful?
+- HI used AI for initial class scaffolding, generating test cases, and refactoring sorting logic. The most helpful prompts were specific ones like "how should Scheduler retrieve tasks from Owner's pets" rather than vague open-ended ones. Using separate chat sessions for design, implementation, algorithms, and testing
+kept each interaction focused and prevented earlier context from biasing later suggestions.
 
 **b. Judgment and verification**
 
-- Describe one moment where you did not accept an AI suggestion as-is.
-- How did you evaluate or verify what the AI suggested?
-
+- The AI suggested using a dictionary keyed by (pet_name, time) for conflict detection.
+I rejected this because it only catches exact duplicates for the same pet and misses
+cross-pet conflicts entirely. I verified my own approach by manually tracing through
+the logic with two pets scheduled at the same time and confirming the warning appeared.
 ---
 
 ## 4. Testing and Verification
 
 **a. What you tested**
 
-- What behaviors did you test?
-- Why were these tests important?
-
+- I tested task completion status changes, recurring task rescheduling for both daily
+and weekly frequencies, conflict detection for same-pet and cross-pet clashes,
+chronological sort order, and filtering by pet name, status, and category.
+These tests were important because they cover both the happy path and edge cases
+like empty lists and duplicate times.
 **b. Confidence**
 
-- How confident are you that your scheduler works correctly?
-- What edge cases would you test next if you had more time?
+- Very confident — 28 tests pass covering all core behaviors and edge cases.
+If I had more time I would test tasks that span midnight, owners with zero pets,
+and adding duplicate pet names.
 
 ---
 
@@ -60,12 +58,17 @@
 
 **a. What went well**
 
-- What part of this project are you most satisfied with?
+- The separation between Scheduler (logic only) and Pet/Owner (data only) made
+testing clean and kept each class focused on one responsibility.
+This made debugging fast because failures pointed directly to the right class.
 
 **b. What you would improve**
 
-- If you had another iteration, what would you improve or redesign?
+- I would add a duration_minutes field to Task so conflict detection could catch
+overlapping time windows rather than just exact-minute clashes.
 
 **c. Key takeaway**
 
-- What is one important thing you learned about designing systems or working with AI on this project?
+- AI is a fast implementer but a poor architect. Every suggestion still required
+evaluation against the actual design goals. The human judgment step — deciding
+which tradeoffs matter for this specific use case — is where the real engineering happens.
